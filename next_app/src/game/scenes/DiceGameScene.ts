@@ -11,9 +11,18 @@ export class DiceGameScene extends Phaser.Scene {
     private dice2Value: number = 1;
     private background: Phaser.GameObjects.Image;
     private isMobile: boolean = false;
+    private zoomLevel: number = 1;
+    private scrollY: number = 0;
+    private uiCamera: Phaser.Cameras.Scene2D.Camera;
     
     constructor() {
         super({ key: 'DiceGameScene' });
+    }
+    
+    init (data: { zoom?: number, scrollY?: number })
+    {
+        this.zoomLevel = data.zoom || 1;
+        this.scrollY = data.scrollY || 0;
     }
     
     preload() {
@@ -25,6 +34,9 @@ export class DiceGameScene extends Phaser.Scene {
     }
     
     create() {
+        this.cameras.main.setZoom(this.zoomLevel);
+        this.cameras.main.setScroll(this.cameras.main.scrollX, this.scrollY);
+
         // Check if running on mobile
         this.isMobile = this.scale.width < 768 || this.sys.game.device.os.android || this.sys.game.device.os.iOS;
         
@@ -37,7 +49,7 @@ export class DiceGameScene extends Phaser.Scene {
         const title = this.add.text(this.scale.width / 2, titleY, 'FLOW Onchain Craps', {
             fontSize: '32px',
             color: '#ffffff'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setName('title');
 
         // Add back button
         const backButton = this.add.text(50, 50, '← Back', {
@@ -82,6 +94,13 @@ export class DiceGameScene extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
 
+        const uiElements = [title, backButton, this.dice1, this.dice2, this.rollButton, this.scoreText];
+
+        this.cameras.main.ignore(uiElements);
+        
+        this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
+        this.uiCamera.ignore(this.background);
+
         // Add resize handler to adjust layout when the screen size changes
         this.scale.on('resize', this.resize, this);
 
@@ -100,6 +119,8 @@ export class DiceGameScene extends Phaser.Scene {
         this.background.setPosition(width / 2, height / 2);
         this.background.setDisplaySize(width, height);
         
+        this.uiCamera.setSize(width, height);
+
         // Update title
         const title = this.children.getByName('title') as Phaser.GameObjects.Text;
         if (title) {

@@ -1,3 +1,5 @@
+'use client';
+import { FlowProvider } from "@/lib/flow/FlowProvider";
 import "@/styles/globals.css";
 import { CacheProvider } from '@emotion/react';
 import { AppProps } from 'next/app';
@@ -18,7 +20,9 @@ export default function MyApp({ Component, pageProps, emotionCache = clientSideE
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <CacheProvider value={emotionCache}>
-        <Component {...pageProps} />
+        <FlowProvider>
+          <Component {...pageProps} />
+        </FlowProvider>
       </CacheProvider>
     </ThemeProvider>
   );

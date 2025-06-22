@@ -9,6 +9,7 @@ export class MainMenu extends Scene
     logoTween: Phaser.Tweens.Tween | null;
     diceGameButton: GameObjects.Text;
     isMobile: boolean = false;
+    uiCamera: Phaser.Cameras.Scene2D.Camera;
 
     constructor ()
     {
@@ -47,6 +48,13 @@ export class MainMenu extends Scene
         .on('pointerover', () => this.diceGameButton.setStyle({ backgroundColor: '#333333' }))
         .on('pointerout', () => this.diceGameButton.setStyle({ backgroundColor: '#000000' }));
 
+        // The main camera should not render the UI elements.
+        this.cameras.main.ignore([this.logo, this.diceGameButton]);
+
+        // Add a new camera for the UI
+        this.uiCamera = this.cameras.add(0, 0, this.scale.width, this.scale.height);
+        this.uiCamera.ignore(this.background);
+
         // Add resize handler
         this.scale.on('resize', this.resize, this);
 
@@ -62,6 +70,9 @@ export class MainMenu extends Scene
         // Update background
         this.background.setPosition(width / 2, height / 2);
         this.background.setDisplaySize(width, height);
+
+        // Update UI camera
+        this.uiCamera.setSize(width, height);
         
         // Update logo
         const logoY = this.isMobile ? height / 3 : 300;
@@ -91,7 +102,25 @@ export class MainMenu extends Scene
             this.logoTween.stop();
             this.logoTween = null;
         }
-        this.scene.start('DiceGameScene');
+
+        this.diceGameButton.disableInteractive();
+
+        const zoomLevel = 1.4;
+        const duration = 1000;
+
+        this.tweens.add({
+            targets: this.cameras.main,
+            zoom: zoomLevel,
+            scrollY: 100,
+            duration: duration,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+                this.scene.start('DiceGameScene', { 
+                    zoom: zoomLevel, 
+                    scrollY: this.cameras.main.scrollY 
+                });
+            }
+        });
     }
 
     moveLogo (reactCallback: ({ x, y }: { x: number, y: number }) => void)

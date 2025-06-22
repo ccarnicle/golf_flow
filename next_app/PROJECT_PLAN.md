@@ -35,7 +35,7 @@ A simple dice game built with Phaser 3 and integrated with Flow blockchain for t
 - [x] Add score display
 - [ ] Create game instructions
 - [ ] Implement game over screen
-- [ ] Develop responsive web layout to house the game (using v0.dev for cyberpunk-themed UI)
+
 
 ### Phase 3: Flow Blockchain Integration (2-3 days)
 #### Smart Contract
@@ -109,6 +109,21 @@ A simple dice game built with Phaser 3 and integrated with Flow blockchain for t
 - [x] Create responsive CSS for different screen sizes
 - [x] Implement proper game positioning at the top of the viewport
 - [x] Add media queries for adaptive layout on different devices
+
+### Phase 8: Transition to Golf Game (3-5 days)
+#### Asset Creation
+- [ ] Create new golf-themed game assets (golf ball, hole, clubs, course elements)
+- [ ] Design new UI elements for the golf game (scorecard, power meter)
+
+#### Game Logic
+- [ ] Develop core golf game mechanics (aiming, power control, putting)
+- [ ] Implement physics for golf ball movement (trajectory, bounce, friction)
+- [ ] Design and create a simple golf course layout
+
+#### Integration
+- [ ] Replace dice game scene with new golf game scene
+- [ ] Adapt blockchain integration for storing golf scores and game state
+- [ ] Update UI components to reflect the golf theme
 
 ## Technical Implementation Details
 
