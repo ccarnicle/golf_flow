@@ -1,0 +1,79 @@
+{
+	"contracts": {
+		"RandomBeaconHistory": {
+            "source": "contracts/RandomBeaconHistory.cdc",
+            "aliases": {
+                "emulator": "f8d6e0586b0a20c7"
+            }
+        },
+        "RandomConsumer": {
+            "source": "contracts/RandomConsumer.cdc",
+            "aliases": {
+                "emulator": "f8d6e0586b0a20c7"
+            }
+        },
+		"Burner": {
+            "source": "contracts/Burner.cdc",
+            "aliases": {
+                "emulator": "f8d6e0586b0a20c7"
+            }
+        },
+        "FlowToken": {
+            "source": "contracts/FlowToken.cdc",
+            "aliases": {
+                "emulator": "0ae53cb6e3f42a79"
+            }
+        },
+		"Xorshift128plus": {
+            "source": "contracts/Xorshift128plus.cdc",
+            "aliases": {
+                "emulator": "f8d6e0586b0a20c7"
+            }
+        },
+        "FungibleToken": {
+            "source": "contracts/FungibleToken.cdc",
+            "aliases": {
+                "emulator": "ee82856bf20e2aa6"
+            }
+        },
+        "ArcadeVault": {
+            "source": "contracts/ArcadeVault.cdc",
+            "aliases": {
+                "emulator": "f8d6e0586b0a20c7"
+            }
+        }
+	},
+	"networks": {
+		"emulator": "127.0.0.1:3569",
+		"mainnet": "access.mainnet.nodes.onflow.org:9000",
+		"testing": "127.0.0.1:3569",
+		"testnet": "access.devnet.nodes.onflow.org:9000"
+	},
+	"accounts": {
+		"emulator-account": {
+			"address": "f8d6e0586b0a20c7",
+			"key": {
+				"type": "file",
+				"location": "emulator-account.pkey"
+			}
+		},
+        "justin": {
+            "address": "179b6b1cb6755e31",
+            "key": {
+                "type": "file",
+                "location": "justin.pkey"
+            }
+        }
+	},
+    "deployments": {
+        "emulator": {
+            
+            "emulator-account": [
+                "Xorshift128plus",
+                "RandomConsumer",
+                "ArcadeVault"
+                
+            ]
+        }
+    }
+}
