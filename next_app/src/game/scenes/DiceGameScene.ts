@@ -14,6 +14,7 @@ export class DiceGameScene extends Phaser.Scene {
     private zoomLevel: number = 1;
     private scrollY: number = 0;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
+    private player: Phaser.GameObjects.Sprite;
     
     constructor() {
         super({ key: 'DiceGameScene' });
@@ -94,7 +95,18 @@ export class DiceGameScene extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
 
-        const uiElements = [title, backButton, this.dice1, this.dice2, this.rollButton, this.scoreText];
+        // --- Player Animation Setup ---
+        this.anims.create({
+            key: 'swing',
+            frames: this.anims.generateFrameNames('player_swing', { prefix: 'swing_', start: 0, end: 5 }),
+            frameRate: 10,
+            repeat: 0
+        });
+
+        const playerScale = 0.3; // Adjust scale as needed
+        this.player = this.add.sprite(this.scale.width / 2 - 40, this.scale.height - 60, 'player_swing', 'swing_0').setScale(playerScale);
+
+        const uiElements = [title, backButton, this.dice1, this.dice2, this.rollButton, this.scoreText, this.player];
 
         this.cameras.main.ignore(uiElements);
         
@@ -168,6 +180,8 @@ export class DiceGameScene extends Phaser.Scene {
         this.isRolling = true;
         this.rollButton.setStyle({ backgroundColor: '#666666' });
         
+        this.player.play('swing');
+
         // Create a timer for 3 seconds of rolling
         const rollDuration = 3000; // 3 seconds
         const rollInterval = 100; // Update every 100ms

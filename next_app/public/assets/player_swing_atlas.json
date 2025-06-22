@@ -1,0 +1,68 @@
+{
+    "textures": [
+        {
+            "image": "player_swing_atlas.png",
+            "format": "RGBA8888",
+            "size": {
+                "w": 1415,
+                "h": 323
+            },
+            "scale": 1,
+            "frames": [
+                {
+                    "filename": "swing_0",
+                    "frame": { "x": 0, "y": 0, "w": 170, "h": 323 },
+                    "rotated": false,
+                    "trimmed": false,
+                    "spriteSourceSize": { "x": 0, "y": 0, "w": 170, "h": 323 },
+                    "sourceSize": { "w": 170, "h": 323 }
+                },
+                {
+                    "filename": "swing_1",
+                    "frame": { "x": 170, "y": 0, "w": 212, "h": 323 },
+                    "rotated": false,
+                    "trimmed": false,
+                    "spriteSourceSize": { "x": 0, "y": 0, "w": 212, "h": 323 },
+                    "sourceSize": { "w": 212, "h": 323 }
+                },
+                {
+                    "filename": "swing_2",
+                    "frame": { "x": 382, "y": 0, "w": 247, "h": 323 },
+                    "rotated": false,
+                    "trimmed": false,
+                    "spriteSourceSize": { "x": 0, "y": 0, "w": 247, "h": 323 },
+                    "sourceSize": { "w": 247, "h": 323 }
+                },
+                {
+                    "filename": "swing_3",
+                    "frame": { "x": 629, "y": 0, "w": 275, "h": 323 },
+                    "rotated": false,
+                    "trimmed": false,
+                    "spriteSourceSize": { "x": 0, "y": 0, "w": 275, "h": 323 },
+                    "sourceSize": { "w": 275, "h": 323 }
+                },
+                {
+                    "filename": "swing_4",
+                    "frame": { "x": 904, "y": 0, "w": 275, "h": 323 },
+                    "rotated": false,
+                    "trimmed": false,
+                    "spriteSourceSize": { "x": 0, "y": 0, "w": 275, "h": 323 },
+                    "sourceSize": { "w": 275, "h": 323 }
+                },
+                {
+                    "filename": "swing_5",
+                    "frame": { "x": 1179, "y": 0, "w": 236, "h": 323 },
+                    "rotated": false,
+                    "trimmed": false,
+                    "spriteSourceSize": { "x": 0, "y": 0, "w": 236, "h": 323 },
+                    "sourceSize": { "w": 236, "h": 323 }
+                }
+            ]
+        }
+    ],
+    "meta": {
+        "app": "Gemini-Code-Assistant",
+        "version": "1.0",
+        "image": "player_swing_atlas.png"
+    }
+} 

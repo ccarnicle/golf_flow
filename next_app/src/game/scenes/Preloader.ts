@@ -34,6 +34,7 @@ export class Preloader extends Scene
 
         this.load.image('logo', 'logo.png');
         this.load.image('star', 'star.png');
+        this.load.atlas('player_swing', 'player_swing_atlas.png', 'player_swing_atlas.json');
     }
 
     create ()
