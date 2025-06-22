@@ -1,0 +1,20 @@
+{
+  "name": "golf_game-monorepo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,  
+  "scripts": {
+    "dev": "npm run dev --workspace=next_app",
+    "build": "npm run build --workspace=next_app",
+    "start": "npm run start --workspace=next_app",
+    "lint": "npm run lint --workspace=next_app"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "workspaces": [  
+    "next_app",
+    "flow_code"
+  ]
+}
