@@ -1,3 +1,5 @@
+flow transactions send ./transactions/buy_equipment.cdc "Bronze" 5.0 --signer=justin
+
 flow transactions send .\transactions\commit_swap.cdc 5.0 --signer=justin
 
 flow transactions send .\transactions\reveal_swap.cdc 0x179b6b1cb6755e31 --signer=justin

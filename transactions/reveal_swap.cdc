@@ -1,4 +1,4 @@
-import "ArcadeVault"
+import ArcadeVault from 0x7a28486e92dac163
 
 // This transaction reveals the outcome of a committed wager.
 // It loads the stored Receipt from the signer's account,

@@ -1,6 +1,6 @@
-import "FungibleToken"
-import "FlowToken"
-import "ArcadeVault"
+import FungibleToken from 0x9a0766d93b6608b7
+import FlowToken from 0x7e60df042a9c0868
+import ArcadeVault from 0x7a28486e92dac163
 
 // This transaction commits a wager to the ArcadeVault contract.
 // It withdraws the specified amount of FLOW from the signer's account,
@@ -32,11 +32,11 @@ transaction(betAmount: UFix64) {
         signer.storage.save(<- receipt, to: ArcadeVault.ReceiptStoragePath)
 
         // 4. Publish a capability to the receipt so it can be accessed publicly if needed.
-        if signer.capabilities.borrow<&ArcadeVault.Receipt>(/public/ArcadeVaultReceipt) == nil {
+        if signer.capabilities.borrow<&ArcadeVault.Receipt>(/public/ArcadeVaultReceipts) == nil {
             let cap = signer.capabilities.storage.issue<&ArcadeVault.Receipt>(
                 ArcadeVault.ReceiptStoragePath
             )
-            signer.capabilities.publish(cap, at: /public/ArcadeVaultReceipt)
+            signer.capabilities.publish(cap, at: /public/ArcadeVaultReceipts)
         }
     }
 

@@ -1,23 +1,21 @@
-import FungibleToken from 0x9a0766d93b6608b7
-import FlowToken from 0x7e60df042a9c0868
-import RandomConsumer from 0xed24dbe901028c5c
-import Burner from 0x9a0766d93b6608b7
-import Xorshift128plus from 0xed24dbe901028c5c
-import NonFungibleToken from 0x631e88ae7f1d7c20
-import SportsEquipment from 0x7a28486e92dac163
+import "FungibleToken"
+import "FlowToken"
+import "RandomConsumer"
+import "Burner"
+import "Xorshift128plus"
 
 /**
 ArcadeVault
 
 A generic contract for facilitating provably fair games of chance.
-This version includes a "Luck Boost" mechanic based on NFT ownership,
-where the boost is determined by the highest-tier item the player owns.
+It uses a modular design for its paytable, allowing the game
+to be easily re-skinned or reconfigured by the owner.
 */
 access(all) contract ArcadeVault {
 
     // ─────────────────────────── Events ─────────────────────────── //
-    access(all) event WagerCommitted(payer: Address, amountCommitted: UFix64, receiptID: UInt64, luckBoost: UInt64)
-    access(all) event WagerRevealed(payer: Address, recipient: Address, wagerAmount: UFix64, receiptID: UInt64, outcomeTier: String, baseRoll: UInt64, luckBoost: UInt64, finalScore: UInt64, payoutAmount: UFix64)
+    access(all) event WagerCommitted(payer: Address, amountCommitted: UFix64, receiptID: UInt64)
+    access(all) event WagerRevealed(payer: Address, recipient: Address, wagerAmount: UFix64, receiptID: UInt64, outcomeTier: String, roll: UInt64, payoutAmount: UFix64)
     access(all) event PaytableChanged()
 
     // ───────────────────── Paths & State ───────────────────── //
@@ -54,14 +52,12 @@ access(all) contract ArcadeVault {
         }
     }
 
-    // ─────────────── Receipt Resource (Now with Luck Boost) ─────────────── //
+    // ─────────────── Receipt Resource ─────────────── //
     access(all) resource Receipt : RandomConsumer.RequestWrapper {
         access(all) let betAmount: UFix64
-        access(all) let luckBoost: UInt64 // Stores the boost at the time of commit
         access(all) var request: @RandomConsumer.Request?
-        init(betAmount: UFix64, luckBoost: UInt64, request: @RandomConsumer.Request) {
+        init(betAmount: UFix64, request: @RandomConsumer.Request) {
             self.betAmount = betAmount
-            self.luckBoost = luckBoost
             self.request <- request
         }
     }
@@ -73,51 +69,17 @@ access(all) contract ArcadeVault {
             bet.getType() == Type<@FlowToken.Vault>(): "Vault must be FlowToken."
         }
         
-        // --- NEW: Tiered Luck Boost Logic ---
-        var highestTier = "None"
-        // Get a capability to the payer's public NFT collection
-        if let equipmentCollection = getAccount(payer).capabilities.get<&{NonFungibleToken.CollectionPublic}>(SportsEquipment.CollectionPublicPath).borrow() {
-            let ids = equipmentCollection.getIDs()
-            for id in ids {
-                // Borrow a reference to the NFT to read its tier
-                if let nft = equipmentCollection.borrowNFT(id) {
-                    if let equipment = nft as? &SportsEquipment.NFT {
-                        let tier = equipment.tier
-
-                        // Check for the best tier, Gold > Silver > Bronze
-                        if tier == "Gold" {
-                            highestTier = "Gold"
-                            break // Found the best, no need to check further
-                        } else if tier == "Silver" {
-                            highestTier = "Silver"
-                        } else if tier == "Bronze" && highestTier != "Silver" {
-                            highestTier = "Bronze"
-                        }
-                    }
-                }
-            }
-        }
-
-        var luckBoost: UInt64 = 0
-        if highestTier == "Gold" {
-            luckBoost = 15
-        } else if highestTier == "Silver" {
-            luckBoost = 10
-        } else if highestTier == "Bronze" {
-            luckBoost = 5
-        }
-        // --- End of New Logic ---
-
+        // Borrow a reference to the contract's reserve vault that can receive tokens
         let reserveRef = self.account.storage.borrow<&{FungibleToken.Receiver}>(from: self.ReserveVaultStoragePath)
             ?? panic("Could not borrow reference to the reserve vault")
+
         let wagerAmount = bet.balance
         reserveRef.deposit(from: <-bet)
         
         let req <- self.consumer.requestRandomness()
-        // Create the receipt with the locked-in luck boost
-        let receipt <- create Receipt(betAmount: wagerAmount, luckBoost: luckBoost, request: <- req)
+        let receipt <- create Receipt(betAmount: wagerAmount, request: <- req)
         
-        emit WagerCommitted(payer: payer, amountCommitted: wagerAmount, receiptID: receipt.uuid, luckBoost: luckBoost)
+        emit WagerCommitted(payer: payer, amountCommitted: wagerAmount, receiptID: receipt.uuid)
         return <- receipt
     }
 
@@ -129,31 +91,28 @@ access(all) contract ArcadeVault {
         
         let wagerAmount = receipt.betAmount
         let receiptID = receipt.uuid
-        let luckBoost = receipt.luckBoost // Get the locked-in boost from the receipt
         
         let prg = self.consumer.fulfillWithPRG(request: <- receipt.popRequest())
         let prgRef: &Xorshift128plus.PRG = &prg
-        let baseRoll = RandomConsumer.getNumberInRange(prg: prgRef, min: 1, max: 100)
+        let roll = RandomConsumer.getNumberInRange(prg: prgRef, min: 1, max: 100)
 
-        // Apply the luck boost to get the final score
-        let scoreWithBoost = baseRoll + luckBoost
-        let finalScoreInt = scoreWithBoost > 100 ? 100 : scoreWithBoost
-        let finalScore = UInt64(finalScoreInt) // Explicitly cast to UInt64
-
-        let result = self.paytable.getResult(score: finalScore)
+        let result = self.paytable.getResult(score: roll)
         let payoutAmount = wagerAmount * result.payoutMultiplier
 
         if payoutAmount > 0.0 {
+            // Borrow a reference to the contract's reserve vault with Withdraw permissions
             let reserveRef = self.account.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: self.ReserveVaultStoragePath)
                 ?? panic("Could not borrow reference to the reserve vault for withdrawal")
+            
             let payoutVault <- reserveRef.withdraw(amount: payoutAmount)
+            
             let playerReceiver = getAccount(recipient)
                 .capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
                 .borrow() ?? panic("Could not borrow receiver capability for recipient")
             playerReceiver.deposit(from: <-payoutVault)
         }
         
-        emit WagerRevealed(payer: payer, recipient: recipient, wagerAmount: wagerAmount, receiptID: receiptID, outcomeTier: result.tier, baseRoll: baseRoll, luckBoost: luckBoost, finalScore: finalScore, payoutAmount: payoutAmount)
+        emit WagerRevealed(payer: payer, recipient: recipient, wagerAmount: wagerAmount, receiptID: receiptID, outcomeTier: result.tier, roll: roll, payoutAmount: payoutAmount)
         Burner.burn(<- receipt)
     }
 
@@ -172,8 +131,16 @@ access(all) contract ArcadeVault {
         self.ReceiptStoragePath = /storage/ArcadeVaultReceipts
         self.AdminStoragePath = /storage/ArcadeVaultAdmin
 
-        self.account.storage.save(<-FlowToken.createEmptyVault(vaultType: Type<@FlowToken.Vault>()), to: self.ReserveVaultStoragePath)
-        let cap = self.account.capabilities.storage.issue<&{FungibleToken.Balance}>(self.ReserveVaultStoragePath)
+        // Create the vault and save it to storage
+        self.account.storage.save(
+            <-FlowToken.createEmptyVault(vaultType: Type<@FlowToken.Vault>()),
+            to: self.ReserveVaultStoragePath
+        )
+
+        // Publish a public capability to the vault's Balance
+        let cap = self.account.capabilities.storage.issue<&{FungibleToken.Balance}>(
+            self.ReserveVaultStoragePath
+        )
         self.account.capabilities.publish(cap, at: /public/ArcadeVaultReserveBalance)
 
         self.consumer <- RandomConsumer.createConsumer()

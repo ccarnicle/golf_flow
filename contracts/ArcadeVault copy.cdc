@@ -1,10 +1,10 @@
-import FungibleToken from 0x9a0766d93b6608b7
-import FlowToken from 0x7e60df042a9c0868
-import RandomConsumer from 0xed24dbe901028c5c
-import Burner from 0x9a0766d93b6608b7
-import Xorshift128plus from 0xed24dbe901028c5c
-import NonFungibleToken from 0x631e88ae7f1d7c20
-import SportsEquipment from 0x7a28486e92dac163
+import "FungibleToken"
+import "FlowToken"
+import "RandomConsumer"
+import "Burner"
+import "Xorshift128plus"
+import "NonFungibleToken"
+import "SportsEquipment"
 
 /**
 ArcadeVault

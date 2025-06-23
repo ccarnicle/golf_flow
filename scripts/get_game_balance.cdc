@@ -7,10 +7,9 @@ import "ArcadeVault"
 access(all) fun main(contractAddress: Address): UFix64 {
     let contractAccount = getAccount(contractAddress)
     
-    // Get a public capability to the contract's vault using the path
-    // defined in the ArcadeVault contract.
+    // Use the actual published path from the contract
     let vaultRef = contractAccount
-        .capabilities.get<&{FungibleToken.Balance}>(ArcadeVault.ReserveVaultStoragePath)
+        .capabilities.get<&{FungibleToken.Balance}>(/public/ArcadeVaultReserveBalance)
         .borrow()
         ?? panic("Could not borrow Balance capability from the contract's vault")
 
