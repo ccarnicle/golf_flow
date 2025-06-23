@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDiceQuery } from '../../lib/flow/hooks/useDiceQuery';
+import { useDiceRoll } from '../../lib/flow/hooks/useDiceRoll';
 
 interface DiceGameProps {
   scene: any; // This will be your Phaser scene instance
@@ -12,6 +13,7 @@ export const DiceGame: React.FC<DiceGameProps> = ({ scene }) => {
   });
 
   const { result, dice1, dice2, isLoading, error, refetch } = useDiceQuery();
+  const { rollDice, isRolling: isTxPending, error: txError, txId } = useDiceRoll();
 
   useEffect(() => {
     console.log('DiceGame Effect:', { 
@@ -42,7 +44,7 @@ export const DiceGame: React.FC<DiceGameProps> = ({ scene }) => {
     }
   }, [scene, result, dice1, dice2, isLoading, error]);
 
-  // Listen for dice roll complete event
+  // Listen for dice roll complete event to refetch data
   useEffect(() => {
     if (scene) {
       console.log('Setting up dice roll listener');
@@ -59,6 +61,24 @@ export const DiceGame: React.FC<DiceGameProps> = ({ scene }) => {
       };
     }
   }, [scene, refetch]);
+
+  // Listen for dice roll started event to send transaction
+  useEffect(() => {
+    if (scene) {
+      console.log('Setting up dice roll started listener');
+      const onDiceRollStarted = () => {
+        console.log('Dice roll started, sending transaction...');
+        rollDice();
+      };
+
+      scene.events.on('diceRollStarted', onDiceRollStarted);
+
+      return () => {
+        console.log('Cleaning up dice roll started listener');
+        scene.events.off('diceRollStarted', onDiceRollStarted);
+      };
+    }
+  }, [scene, rollDice]);
 
   return null; // This component doesn't render anything directly
 }; 
