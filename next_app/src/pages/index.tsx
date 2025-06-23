@@ -11,7 +11,7 @@ export default function Home() {
     return (
         <>
             <Head>
-                <title>Flow Dice Game</title>
+                <title>Home Run Heroes</title>
                 <meta name="description" content="A dice game built with Phaser 3 and integrated with Flow blockchain." />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
                 <meta name="theme-color" content="#000000" />

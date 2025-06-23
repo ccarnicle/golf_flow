@@ -18,6 +18,7 @@ export class MainMenu extends Scene
 
     create ()
     {
+        this.cameras.main.fadeIn(500, 0, 0, 0);
         // Check if running on mobile
         this.isMobile = this.scale.width < 768 || this.sys.game.device.os.android || this.sys.game.device.os.iOS;
         
@@ -30,21 +31,23 @@ export class MainMenu extends Scene
         this.logo = this.add.image(this.scale.width / 2, logoY, 'logo').setDepth(100);
         
         // Scale the logo based on screen size
-        const logoScale = this.isMobile ? 0.7 : 1;
+        const logoScale = this.isMobile ? 0.56 : 0.8;
         this.logo.setScale(logoScale);
 
         // Responsive button positioning
         const buttonY = this.isMobile ? this.scale.height * 0.65 : 520;
-        this.diceGameButton = this.add.text(this.scale.width / 2, buttonY, 'Play Dice Game', {
-            fontFamily: 'Arial', 
+        this.diceGameButton = this.add.text(this.scale.width / 2, buttonY, 'Play Home Run Heroes', {
+            fontFamily: '"Comic Sans MS", "Comic Sans", cursive', 
             fontSize: this.isMobile ? 20 : 24, 
             color: '#ffffff',
             backgroundColor: '#000000',
-            padding: { x: 20, y: 10 }
+            padding: { x: 20, y: 10 },
+            // @ts-ignore
+            borderRadius: 15
         })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.startDiceGame())
+        .on('pointerdown', () => this.startTicketCounterScene())
         .on('pointerover', () => this.diceGameButton.setStyle({ backgroundColor: '#333333' }))
         .on('pointerout', () => this.diceGameButton.setStyle({ backgroundColor: '#000000' }));
 
@@ -76,7 +79,7 @@ export class MainMenu extends Scene
         
         // Update logo
         const logoY = this.isMobile ? height / 3 : 300;
-        const logoScale = this.isMobile ? 0.7 : 1;
+        const logoScale = this.isMobile ? 0.56 : 0.8;
         this.logo.setPosition(width / 2, logoY);
         this.logo.setScale(logoScale);
         
@@ -97,29 +100,15 @@ export class MainMenu extends Scene
         this.scene.start('Game');
     }
 
-    startDiceGame() {
+    startTicketCounterScene() {
         if (this.logoTween) {
             this.logoTween.stop();
             this.logoTween = null;
         }
 
-        this.diceGameButton.disableInteractive();
-
-        const zoomLevel = 1.4;
-        const duration = 1000;
-
-        this.tweens.add({
-            targets: this.cameras.main,
-            zoom: zoomLevel,
-            scrollY: 100,
-            duration: duration,
-            ease: 'Sine.easeInOut',
-            onComplete: () => {
-                this.scene.start('DiceGameScene', { 
-                    zoom: zoomLevel, 
-                    scrollY: this.cameras.main.scrollY 
-                });
-            }
+        this.cameras.main.fadeOut(500, 0, 0, 0);
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+            this.scene.start('TicketCounterScene');
         });
     }
 

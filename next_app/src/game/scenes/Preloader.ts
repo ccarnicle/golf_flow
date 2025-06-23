@@ -34,6 +34,15 @@ export class Preloader extends Scene
 
         this.load.image('logo', 'logo.png');
         this.load.image('star', 'star.png');
+        this.load.image('bg', 'bg.png');
+        this.load.image('baseball_bg', 'baseball_bg.png');
+        this.load.image('field_bg', 'field_bg.png');
+        this.load.image('ticket_counter', 'ticket_counter.png');
+        this.load.image('bat_sales', 'bat_sales.png');
+        this.load.image('firebat_1', 'firebat_1.png');
+        this.load.image('firebat_2', 'firebat_2.png');
+        this.load.image('firebat_3', 'firebat_3.png');
+
         this.load.atlas('player_swing', 'player_swing_atlas.png', 'player_swing_atlas.json');
     }
 

@@ -38,7 +38,7 @@ const NavBar = () => {
     <StyledAppBar position="static">
       <Toolbar>
         <StyledTypography variant="h6">
-          Onchain Golf
+          Home Run Heroes
         </StyledTypography>
         <WalletButton 
           color = "primary" 

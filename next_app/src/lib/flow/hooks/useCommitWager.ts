@@ -1,34 +1,44 @@
 import { useFlowMutate } from "@onflow/kit";
 import * as fcl from "@onflow/fcl";
-import { diceRollScript } from "../transactions/diceRoll";
+import { commitWagerScript } from "../transactions/commitWager";
 
-export const useDiceRoll = () => {
+interface UseCommitWagerProps {
+    onTransactionSubmitted: (txId: string) => void;
+    onTransactionSealed: (sealedTx: any) => void;
+    onTransactionError: (error: Error) => void;
+}
+
+export const useCommitWager = ({ 
+    onTransactionSubmitted, 
+    onTransactionSealed, 
+    onTransactionError 
+}: UseCommitWagerProps) => {
   const { mutate, isPending, error, data: txId } = useFlowMutate({
     mutation: {
       onSuccess: async (txId) => {
         console.log("Transaction Submitted:", txId);
+        onTransactionSubmitted(txId);
         try {
           const sealedTx = await fcl.tx(txId).onceSealed();
           console.log("Transaction Sealed:", sealedTx);
-          // More logic here
+          onTransactionSealed(sealedTx);
         } catch (err) {
           console.error("Error while waiting for transaction to seal:", err);
-          // Optionally, you can call your onError logic here manually
-          // onError(err);
+          onTransactionError(err as Error);
         }
       },
       onError: (error) => {
         console.error("Transaction Error:", error);
+        onTransactionError(error);
       }
     },
   });
 
-  const rollDice = () => {
+  const commitWager = (amount: string) => {
     mutate({
-      cadence: diceRollScript,
+      cadence: commitWagerScript,
       args: (arg, t) => [
-        arg("FIELD", t.String), // hardcoded betName
-        arg("10.0", t.UFix64), // hardcoded amount
+        arg(amount, t.UFix64),
       ],
       proposer: fcl.authz,
       payer: fcl.authz,
@@ -38,8 +48,8 @@ export const useDiceRoll = () => {
   };
 
   return {
-    rollDice,
-    isRolling: isPending,
+    commitWager,
+    isCommitting: isPending,
     error,
     txId,
   };

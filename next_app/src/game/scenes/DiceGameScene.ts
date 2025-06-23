@@ -7,8 +7,6 @@ export class DiceGameScene extends Phaser.Scene {
     private isRolling: boolean = false;
     private background: Phaser.GameObjects.Image;
     private isMobile: boolean = false;
-    private zoomLevel: number = 1;
-    private scrollY: number = 0;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
     private player: Phaser.GameObjects.Sprite;
     
@@ -16,25 +14,17 @@ export class DiceGameScene extends Phaser.Scene {
         super({ key: 'DiceGameScene' });
     }
     
-    init (data: { zoom?: number, scrollY?: number })
-    {
-        this.zoomLevel = data.zoom || 1;
-        this.scrollY = data.scrollY || 0;
-    }
-    
     preload() {
         // Load the spritesheet with correct frame dimensions
     }
     
     create() {
-        this.cameras.main.setZoom(this.zoomLevel);
-        this.cameras.main.setScroll(this.cameras.main.scrollX, this.scrollY);
-
+        this.cameras.main.fadeIn(500, 0, 0, 0);
         // Check if running on mobile
         this.isMobile = this.scale.width < 768 || this.sys.game.device.os.android || this.sys.game.device.os.iOS;
         
         // Set background to fit screen
-        this.background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+        this.background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'field_bg');
         this.background.setDisplaySize(this.scale.width, this.scale.height);
 
         // Set game title with responsive positioning
@@ -52,7 +42,7 @@ export class DiceGameScene extends Phaser.Scene {
             padding: { x: 10, y: 5 }
         })
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.scene.start('MainMenu'));
+        .on('pointerdown', () => this.goBackToMenu());
 
         // Create roll button with responsive positioning
         const buttonY = this.isMobile ? this.scale.height / 2 + 100 : 450;
@@ -100,6 +90,13 @@ export class DiceGameScene extends Phaser.Scene {
         EventBus.emit('current-scene-ready', this);
     }
     
+    goBackToMenu() {
+        this.cameras.main.fadeOut(500, 0, 0, 0);
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+            this.scene.start('MainMenu');
+        });
+    }
+
     // Handle resize events for responsiveness
     resize(gameSize: Phaser.Structs.Size) {
         const width = gameSize.width;
