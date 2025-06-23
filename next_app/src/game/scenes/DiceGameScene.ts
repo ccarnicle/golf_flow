@@ -2,17 +2,11 @@ import Phaser from 'phaser';
 import { EventBus } from '../EventBus';
 
 export class DiceGameScene extends Phaser.Scene {
-    private dice1: Phaser.GameObjects.Sprite;
-    private dice2: Phaser.GameObjects.Sprite;
     private rollButton: Phaser.GameObjects.Text;
     private scoreText: Phaser.GameObjects.Text;
     private isRolling: boolean = false;
-    private dice1Value: number = 1;
-    private dice2Value: number = 1;
     private background: Phaser.GameObjects.Image;
     private isMobile: boolean = false;
-    private zoomLevel: number = 1;
-    private scrollY: number = 0;
     private uiCamera: Phaser.Cameras.Scene2D.Camera;
     private player: Phaser.GameObjects.Sprite;
     
@@ -20,29 +14,17 @@ export class DiceGameScene extends Phaser.Scene {
         super({ key: 'DiceGameScene' });
     }
     
-    init (data: { zoom?: number, scrollY?: number })
-    {
-        this.zoomLevel = data.zoom || 1;
-        this.scrollY = data.scrollY || 0;
-    }
-    
     preload() {
         // Load the spritesheet with correct frame dimensions
-        this.load.spritesheet('dice', 'assets/dice.png', {
-            frameWidth: 256,
-            frameHeight: 256
-        });
     }
     
     create() {
-        this.cameras.main.setZoom(this.zoomLevel);
-        this.cameras.main.setScroll(this.cameras.main.scrollX, this.scrollY);
-
+        this.cameras.main.fadeIn(500, 0, 0, 0);
         // Check if running on mobile
         this.isMobile = this.scale.width < 768 || this.sys.game.device.os.android || this.sys.game.device.os.iOS;
         
         // Set background to fit screen
-        this.background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+        this.background = this.add.image(this.scale.width / 2, this.scale.height / 2, 'field_bg');
         this.background.setDisplaySize(this.scale.width, this.scale.height);
 
         // Set game title with responsive positioning
@@ -60,19 +42,7 @@ export class DiceGameScene extends Phaser.Scene {
             padding: { x: 10, y: 5 }
         })
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.scene.start('MainMenu'));
-
-        // Calculate dice positioning based on screen size
-        const diceScale = this.isMobile ? 0.3 : 0.45;
-        const diceY = this.isMobile ? this.scale.height / 2 - 50 : 300;
-        const diceGap = this.isMobile ? 100 : 150;
-        
-        // Create two dice sprites side by side
-        this.dice1 = this.add.sprite(this.scale.width / 2 - diceGap / 2, diceY, 'dice', 0)
-            .setScale(diceScale);
-            
-        this.dice2 = this.add.sprite(this.scale.width / 2 + diceGap / 2, diceY, 'dice', 0)
-            .setScale(diceScale);
+        .on('pointerdown', () => this.goBackToMenu());
 
         // Create roll button with responsive positioning
         const buttonY = this.isMobile ? this.scale.height / 2 + 100 : 450;
@@ -106,7 +76,7 @@ export class DiceGameScene extends Phaser.Scene {
         const playerScale = 0.3; // Adjust scale as needed
         this.player = this.add.sprite(this.scale.width / 2 - 40, this.scale.height - 60, 'player_swing', 'swing_0').setScale(playerScale);
 
-        const uiElements = [title, backButton, this.dice1, this.dice2, this.rollButton, this.scoreText, this.player];
+        const uiElements = [title, backButton, this.rollButton, this.scoreText, this.player];
 
         this.cameras.main.ignore(uiElements);
         
@@ -120,6 +90,13 @@ export class DiceGameScene extends Phaser.Scene {
         EventBus.emit('current-scene-ready', this);
     }
     
+    goBackToMenu() {
+        this.cameras.main.fadeOut(500, 0, 0, 0);
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+            this.scene.start('MainMenu');
+        });
+    }
+
     // Handle resize events for responsiveness
     resize(gameSize: Phaser.Structs.Size) {
         const width = gameSize.width;
@@ -139,17 +116,6 @@ export class DiceGameScene extends Phaser.Scene {
             title.setPosition(width / 2, this.isMobile ? 150 : 200);
             title.setFontSize(this.isMobile ? 24 : 32);
         }
-        
-        // Update dice positions
-        const diceScale = this.isMobile ? 0.3 : 0.45;
-        const diceY = this.isMobile ? height / 2 - 50 : 300;
-        const diceGap = this.isMobile ? 100 : 150;
-        
-        this.dice1.setPosition(width / 2 - diceGap / 2, diceY);
-        this.dice1.setScale(diceScale);
-        
-        this.dice2.setPosition(width / 2 + diceGap / 2, diceY);
-        this.dice2.setScale(diceScale);
         
         // Update button position
         const buttonY = this.isMobile ? height / 2 + 100 : 450;
@@ -176,6 +142,8 @@ export class DiceGameScene extends Phaser.Scene {
     private rollDice() {
         if (this.isRolling) return;
         
+        this.events.emit('diceRollStarted');
+        
         console.log('Starting dice roll');
         this.isRolling = true;
         this.rollButton.setStyle({ backgroundColor: '#666666' });
@@ -184,48 +152,14 @@ export class DiceGameScene extends Phaser.Scene {
 
         // Create a timer for 3 seconds of rolling
         const rollDuration = 3000; // 3 seconds
-        const rollInterval = 100; // Update every 100ms
-        const startTime = Date.now();
-        
-        // Create the rolling animation
-        const rollAnimation = this.time.addEvent({
-            delay: rollInterval,
-            callback: () => {
-                // Generate random numbers between 1 and 6 for visual effect
-                const randomDice1 = Phaser.Math.Between(1, 6);
-                const randomDice2 = Phaser.Math.Between(1, 6);
-                
-                // Update the dice sprites with random values during animation
-                this.dice1.setFrame(randomDice1 - 1);
-                this.dice2.setFrame(randomDice2 - 1);
-                
-                // Add some rotation animation
-                this.dice1.angle += 45;
-                this.dice2.angle -= 45;
-                
-                // Add some bounce effect
-                this.dice1.y = (this.isMobile ? this.scale.height / 2 - 50 : 300) + Math.sin(Date.now() / 100) * 10;
-                this.dice2.y = (this.isMobile ? this.scale.height / 2 - 50 : 300) + Math.sin(Date.now() / 100 + Math.PI) * 10;
-                
-                // Check if we should stop rolling
-                if (Date.now() - startTime >= rollDuration) {
-                    rollAnimation.remove();
-                    this.isRolling = false;
-                    this.rollButton.setStyle({ backgroundColor: '#000000' });
-                    
-                    // Reset dice position and rotation
-                    this.dice1.angle = 0;
-                    this.dice2.angle = 0;
-                    this.dice1.y = this.isMobile ? this.scale.height / 2 - 50 : 300;
-                    this.dice2.y = this.isMobile ? this.scale.height / 2 - 50 : 300;
-                    
-                    // Emit a custom event that the roll is complete
-                    console.log('Emitting diceRollComplete event');
-                    this.events.emit('diceRollComplete');
-                }
-            },
-            callbackScope: this,
-            loop: true
+
+        this.time.delayedCall(rollDuration, () => {
+            this.isRolling = false;
+            this.rollButton.setStyle({ backgroundColor: '#000000' });
+            
+            // Emit a custom event that the roll is complete
+            console.log('Emitting diceRollComplete event');
+            this.events.emit('diceRollComplete');
         });
     }
 } 

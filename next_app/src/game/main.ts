@@ -5,6 +5,8 @@ import { MainMenu } from './scenes/MainMenu';
 import { AUTO, Game, Scale } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import { DiceGameScene } from './scenes/DiceGameScene';
+import { TicketCounterScene } from './scenes/TicketCounterScene';
+import { BatSalesScene } from './scenes/BatSalesScene';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -34,7 +36,9 @@ const config: Phaser.Types.Core.GameConfig = {
         MainMenu,
         MainGame,
         GameOver,
-        DiceGameScene
+        DiceGameScene,
+        TicketCounterScene,
+        BatSalesScene
     ]
 };
 
