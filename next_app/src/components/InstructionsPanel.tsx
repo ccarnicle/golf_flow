@@ -1,4 +1,4 @@
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, Link } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -31,16 +31,21 @@ const InstructionsPanel = () => {
         How to Play
       </StyledTypography>
       <StyledTypography variant="body1">
-        1. Connect your wallet to start playing
+        1. Connect Flow wallet to Play
       </StyledTypography>
       <StyledTypography variant="body1">
-        2. Place your bet using the in-game controls
+        2. Get Testnet flow from the{' '}
+        <Link
+          href="https://faucet.flow.com/fund-account"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: '#00ffff' }}
+        >
+          Flow Faucet
+        </Link>
       </StyledTypography>
       <StyledTypography variant="body1">
-        3. Roll the dice and test your luck
-      </StyledTypography>
-      <StyledTypography variant="body1">
-        4. Win Flow tokens based on your roll
+        3. Go to the ticket counter and buy tickets to play!
       </StyledTypography>
       <StyledTypography variant="body2" sx={{ color: '#888888', mt: 2 }}>
         Powered by Flow Blockchain
