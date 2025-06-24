@@ -9,12 +9,23 @@ export class TicketCounterScene extends Scene {
     inputText: GameObjects.Text;
     welcomeText: GameObjects.Text;
     typewriterAnimation: Phaser.Time.TimerEvent;
+    flowBalanceText: GameObjects.Text;
+    private numberInputChangedHandler: (value: string) => void;
+    private inputActiveHandler: () => void;
+    private inputInactiveHandler: () => void;
+    private transactionSubmittedHandler: () => void;
+    private transactionSealedHandler: () => void;
+    private flowBalanceUpdatedHandler: (balance: string) => void;
+    private sceneId: string;
 
     constructor() {
         super('TicketCounterScene');
+        this.sceneId = `TicketCounterScene_${Date.now()}`;
+        console.log(`[${this.sceneId}] Constructor called`);
     }
 
     create() {
+        console.log(`[${this.sceneId}] Create method called`);
         this.cameras.main.fadeIn(500, 0, 0, 0);
         this.isMobile = this.scale.width < 768 || this.sys.game.device.os.android || this.sys.game.device.os.iOS;
 
@@ -24,13 +35,13 @@ export class TicketCounterScene extends Scene {
         const gridCellSize = 28.8;
 
         // --- Typewriter Text ---
-        const textX = (5 - 1) * gridCellSize;
-        const textY = ((7 - 1) * gridCellSize) + 10;
-        const textWrapWidth = (17 - 5 + 1) * gridCellSize;
-        const fullText = 'Welcome young buck, ready to swing for the fences?! How many tickets would you like to purchase?';
+        const textX = (3 - 1) * gridCellSize;
+        const textY = ((4 - 1) * gridCellSize) + 12;
+        const textWrapWidth = (18 - 3 + 1) * gridCellSize;
+        const fullText = "Welcome to Home Run Heroes, champ! Ready to become a legend? Place your wager in FLOW tokens and step up to the plate for a chance at glory! The bigger your bet, the bigger your potential payout.\nPro tip - check out that Bat Shop over there first. A better bat can really improve your odds!";
         this.welcomeText = this.add.text(textX, textY, '', {
             fontFamily: 'Comic Sans MS',
-            fontSize: '22px',
+            fontSize: '20px',
             color: '#111111',
             wordWrap: { width: textWrapWidth }
         });
@@ -65,35 +76,60 @@ export class TicketCounterScene extends Scene {
             });
         });
 
-        EventBus.on('number-input-changed', (value: string) => {
+        this.numberInputChangedHandler = (value: string) => {
+            if (!this.scene.isActive()) return;
             this.inputText.setText(value);
-        });
+        };
+        EventBus.on('number-input-changed', this.numberInputChangedHandler);
 
-        EventBus.on('input-active', () => {
+        this.inputActiveHandler = () => {
+            if (!this.scene.isActive()) return;
             this.inputText.setVisible(false);
-        });
+        };
+        EventBus.on('input-active', this.inputActiveHandler);
 
-        EventBus.on('input-inactive', () => {
+        this.inputInactiveHandler = () => {
+            if (!this.scene.isActive()) return;
             this.inputText.setVisible(true);
-        });
+        };
+        EventBus.on('input-inactive', this.inputInactiveHandler);
 
-        EventBus.on('transaction-submitted', () => {
+        this.transactionSubmittedHandler = () => {
+            console.log(`[${this.sceneId}] transaction-submitted handled. Active: ${this.scene.isActive()}`);
+            if (!this.scene.isActive()) return;
+
             if (this.typewriterAnimation) {
                 this.typewriterAnimation.destroy();
             }
-            this.animateText(this.welcomeText, "Good luck young buck, you're gonna need it. You have one swing to knock it out of the park!");
+            this.animateText(this.welcomeText, "\n\n\nGood luck young buck, you're gonna need it. You have one swing to knock it out of the park!");
             const text = this.playButton.getAt(1) as GameObjects.Text;
             text.setText('Verifying...');
             this.playButton.disableInteractive();
-        });
+        };
+        EventBus.on('transaction-submitted', this.transactionSubmittedHandler);
 
-        EventBus.on('transaction-sealed', () => {
+        this.transactionSealedHandler = () => {
+            console.log(`[${this.sceneId}] transaction-sealed handled. Active: ${this.scene.isActive()}`);
+            if (!this.scene.isActive()) return;
+
             const text = this.playButton.getAt(1) as GameObjects.Text;
             text.setText('Play Ball');
             this.playButton.off('pointerdown');
             this.playButton.setInteractive()
             .on('pointerdown', () => this.goToGameScene());
-        });
+        };
+        EventBus.on('transaction-sealed', this.transactionSealedHandler);
+
+        this.flowBalanceUpdatedHandler = (balance: string) => {
+            if (!this.scene.isActive()) return;
+            if (balance) {
+                const formattedBalance = parseFloat(balance).toFixed(2);
+                this.flowBalanceText.setText(`FLOW Balance: ${formattedBalance}`);
+            } else {
+                this.flowBalanceText.setText('Could not fetch balance');
+            }
+        };
+        EventBus.on('flow-balance-updated', this.flowBalanceUpdatedHandler);
 
         // --- Buttons ---
         const buttonY = this.isMobile ? this.scale.height * 0.8 : 600;
@@ -102,6 +138,13 @@ export class TicketCounterScene extends Scene {
         this.buyBatButton = this.createButton(0, 0, 'Buy A Bat', () => this.goToBatSalesScene());
         const buyBatButtonY = this.playButton.y + this.playButton.height / 2 + 30 + this.buyBatButton.height / 2;
         this.buyBatButton.setPosition(this.scale.width / 2, buyBatButtonY);
+
+        const flowBalanceY = this.buyBatButton.y + this.buyBatButton.height / 2 + 20;
+        this.flowBalanceText = this.add.text(this.scale.width / 2, flowBalanceY, 'FLOW Balance: ...', {
+            fontFamily: 'Comic Sans MS',
+            fontSize: '18px',
+            color: '#ffffff',
+        }).setOrigin(0.5);
 
         const backButton = this.add.text(50, 50, '← Back', {
             fontSize: '24px',
@@ -114,6 +157,17 @@ export class TicketCounterScene extends Scene {
 
         this.scale.on('resize', this.resize, this);
         EventBus.emit('current-scene-ready', this);
+        EventBus.emit('refresh-flow-balance');
+    }
+
+    shutdown() {
+        console.log(`[${this.sceneId}] Shutting down TicketCounterScene and removing event listeners.`);
+        EventBus.off('number-input-changed', this.numberInputChangedHandler);
+        EventBus.off('input-active', this.inputActiveHandler);
+        EventBus.off('input-inactive', this.inputInactiveHandler);
+        EventBus.off('transaction-submitted', this.transactionSubmittedHandler);
+        EventBus.off('transaction-sealed', this.transactionSealedHandler);
+        EventBus.off('flow-balance-updated', this.flowBalanceUpdatedHandler);
     }
 
     createButton(x: number, y: number, text: string, onClick: () => void): GameObjects.Container {
@@ -204,12 +258,17 @@ export class TicketCounterScene extends Scene {
         this.background.setPosition(width / 2, height / 2);
         this.background.setDisplaySize(width, height);
         
-        // const buttonY = this.isMobile ? height * 0.8 : 600;
-        // this.playButton.setPosition(width / 2, buttonY);
+        const buttonY = this.isMobile ? height * 0.8 : 600;
+        this.playButton.setPosition(width / 2, buttonY);
         
-        // if (this.buyBatButton) {
-        //     const buyBatButtonY = this.playButton.y + this.playButton.height / 2 + 30 + this.buyBatButton.height / 2;
-        //     this.buyBatButton.setPosition(this.playButton.x, buyBatButtonY);
-        // }
+        if (this.buyBatButton) {
+            const buyBatButtonY = this.playButton.y + this.playButton.height / 2 + 30 + this.buyBatButton.height / 2;
+            this.buyBatButton.setPosition(this.playButton.x, buyBatButtonY);
+
+            if (this.flowBalanceText) {
+                const flowBalanceY = this.buyBatButton.y + this.buyBatButton.height / 2 + 20;
+                this.flowBalanceText.setPosition(width / 2, flowBalanceY);
+            }
+        }
     }
 } 
