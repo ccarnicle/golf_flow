@@ -3,7 +3,9 @@ import { styled } from '@mui/material/styles';
 import NavBar from './NavBar';
 import GameContainer from './GameContainer';
 import InstructionsPanel from './InstructionsPanel';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
+import { useCurrentFlowUser } from '@onflow/kit';
+import { EventBus } from '@/game/EventBus';
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   minHeight: '100vh',
@@ -19,7 +21,22 @@ interface AppLayoutProps {
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
+  const { user } = useCurrentFlowUser();
   const theme = useTheme();
+
+  useEffect(() => {
+    // Emit wallet connection status to Phaser game
+    EventBus.emit('wallet-connection-status', user?.loggedIn ?? false);
+
+    const handleMainMenuReady = () => {
+      EventBus.emit('wallet-connection-status', user?.loggedIn ?? false);
+    };
+    EventBus.on('main-menu-ready', handleMainMenuReady);
+
+    return () => {
+      EventBus.off('main-menu-ready', handleMainMenuReady);
+    };
+  }, [user]);
 
   return (
     <StyledContainer maxWidth={false}>
