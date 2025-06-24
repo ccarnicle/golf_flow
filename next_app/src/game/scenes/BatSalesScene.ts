@@ -9,9 +9,8 @@ export class BatSalesScene extends Scene {
     batImages: string[];
     currentBatIndex: number;
     batImage: GameObjects.Image;
-    batData: { key: string, text: string }[];
+    batData: { key: string; text: string; tier: string; amount: string; }[];
     buyButton: GameObjects.Container;
-    currentBatText: GameObjects.Text;
 
     constructor() {
         super('BatSalesScene');
@@ -27,8 +26,6 @@ export class BatSalesScene extends Scene {
         let scale = Math.max(this.scale.width / this.background.width, this.scale.height / this.background.height);
         this.background.setScale(scale).setScrollFactor(0);
 
-        const dialogueContent = "Hey there feller! Would ya like a new bat? Each one will give ya a boost now ya hear!";
-
         const textStyle = {
             fontFamily: 'Comic Sans MS',
             fontSize: '24px',
@@ -43,21 +40,35 @@ export class BatSalesScene extends Scene {
         };
 
         this.dialogueText = this.add.text(218, 80, '', textStyle);
-        this.animateText(this.dialogueText, dialogueContent)
-
-        this.currentBatText = this.add.text(this.dialogueText.x, this.dialogueText.y + this.dialogueText.height + 30, '', batTextStyle);
 
         EventBus.on('user-bat-updated', (bat: string) => {
             console.log("BatSalesScene received user-bat-updated event with:", bat);
-            this.currentBatText.setText(`Your current bat: ${bat}`);
-            // Adjust position after setting text to ensure correct alignment
-            this.currentBatText.y = this.dialogueText.y + this.dialogueText.height + 30;
+        
+            let dialogueContent = '';
+            switch (bat) {
+                case 'Default':
+                    dialogueContent = "That old wooden stick? You're brave, I'll give you that! But if you want to hit like the pros, you're gonna need some real equipment.";
+                    break;
+                case 'Bronze':
+                    dialogueContent = "Not bad for a starter bat! But if you're serious about those home runs, maybe it's time to step up your game.";
+                    break;
+                case 'Silver':
+                    dialogueContent = "Nice choice! That's solid equipment right there. Though if you really want to dominate the diamond, I've got something even better...";
+                    break;
+                case 'Gold':
+                    dialogueContent = "Now THAT'S what I'm talking about! You've got excellent taste - that's top-tier equipment right there!";
+                    break;
+                default:
+                    dialogueContent = "That old wooden stick? You're brave, I'll give you that! But if you want to hit like the pros, you're gonna need some real equipment.";
+                    break;
+            }
+            this.animateText(this.dialogueText, dialogueContent);
         });
 
         this.batData = [
-            { key: 'firebat_1', text: 'Buy Fire Bat for 5 $FLOW' },
-            { key: 'firebat_2', text: 'Buy Double Fire Bat for 10 $FLOW' },
-            { key: 'firebat_3', text: 'Buy Skull Fire Bat for 25 $FLOW' }
+            { key: 'firebat_1', text: 'Buy Fire Bat for 5 $FLOW', tier: 'Bronze', amount: '5.0'},
+            { key: 'firebat_2', text: 'Buy Double Fire Bat for 10 $FLOW', tier: 'Silver', amount: '10.0' },
+            { key: 'firebat_3', text: 'Buy Skull Fire Bat for 25 $FLOW', tier: 'Gold', amount: '25.0' }
         ];
         this.batImages = this.batData.map(b => b.key);
         this.currentBatIndex = 0;
@@ -75,6 +86,15 @@ export class BatSalesScene extends Scene {
         nextButtonZone.on('pointerdown', () => this.showNextBat());
 
         this.updateBuyButton();
+
+        EventBus.on('transaction-sealed', () => {
+            const buttonText = this.buyButton.getAt(1) as GameObjects.Text;
+            buttonText.setText('Success!');
+            
+            this.time.delayedCall(1500, () => {
+                this.goBackToTicketCounter();
+            });
+        });
 
         this.scale.on('resize', this.resize, this);
         EventBus.emit('bat-sales-scene-ready');
@@ -191,6 +211,10 @@ export class BatSalesScene extends Scene {
         
         this.buyButton = this.createButton(0, 0, buttonText, () => {
             console.log(`Buy button for ${currentBatData.text} clicked`);
+            EventBus.emit('buy-bat-clicked', { tier: currentBatData.tier, amount: currentBatData.amount });
+            const buttonText = this.buyButton.getAt(1) as GameObjects.Text;
+            buttonText.setText('Buying...');
+            this.buyButton.disableInteractive();
         });
     
         const gridCellSize = 28.8;
