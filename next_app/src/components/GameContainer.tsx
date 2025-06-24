@@ -1,7 +1,10 @@
 import { Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { useTheme } from '@mui/material';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
+import { useRevealWager } from '@/lib/flow/hooks/useRevealWager';
+import { useCurrentFlowUser } from '@onflow/kit';
+import { EventBus } from '@/game/EventBus';
 
 const StyledGameContainer = styled(Box)(({ theme }) => ({
   width: '480px',
@@ -51,6 +54,22 @@ interface GameContainerProps {
 
 const GameContainer = ({ children }: GameContainerProps) => {
   const theme = useTheme();
+  const { revealWager } = useRevealWager();
+  const { user } = useCurrentFlowUser();
+
+  useEffect(() => {
+    const handleSwingBat = () => {
+      if (user?.addr) {
+        revealWager(user.addr);
+      }
+    };
+
+    EventBus.on('swing-bat-clicked', handleSwingBat);
+
+    return () => {
+      EventBus.off('swing-bat-clicked', handleSwingBat);
+    };
+  }, [user, revealWager]);
 
   return (
     <StyledGameContainer>

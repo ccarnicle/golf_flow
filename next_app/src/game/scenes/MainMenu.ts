@@ -36,20 +36,18 @@ export class MainMenu extends Scene
 
         // Responsive button positioning
         const buttonY = this.isMobile ? this.scale.height * 0.65 : 520;
-        this.diceGameButton = this.add.text(this.scale.width / 2, buttonY, 'Play Home Run Heroes', {
+        this.diceGameButton = this.add.text(this.scale.width / 2, buttonY, 'Connect Wallet to Play', {
             fontFamily: '"Comic Sans MS", "Comic Sans", cursive', 
             fontSize: this.isMobile ? 20 : 24, 
             color: '#ffffff',
-            backgroundColor: '#000000',
+            backgroundColor: '#555555',
             padding: { x: 20, y: 10 },
             // @ts-ignore
             borderRadius: 15
         })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => this.startTicketCounterScene())
-        .on('pointerover', () => this.diceGameButton.setStyle({ backgroundColor: '#333333' }))
-        .on('pointerout', () => this.diceGameButton.setStyle({ backgroundColor: '#000000' }));
+        .setOrigin(0.5);
+
+        this.diceGameButton.disableInteractive();
 
         // The main camera should not render the UI elements.
         this.cameras.main.ignore([this.logo, this.diceGameButton]);
@@ -60,6 +58,13 @@ export class MainMenu extends Scene
 
         // Add resize handler
         this.scale.on('resize', this.resize, this);
+
+        EventBus.on('wallet-connection-status', this.handleWalletStatus, this);
+        this.events.on('shutdown', () => {
+            EventBus.off('wallet-connection-status', this.handleWalletStatus, this);
+        });
+
+        EventBus.emit('main-menu-ready');
 
         EventBus.emit('current-scene-ready', this);
     }
@@ -146,6 +151,25 @@ export class MainMenu extends Scene
                     }
                 }
             });
+        }
+    }
+
+    handleWalletStatus (isConnected: boolean)
+    {
+        if (isConnected)
+        {
+            this.diceGameButton.setText('Play Home Run Heroes');
+            this.diceGameButton.setStyle({ backgroundColor: '#000000' });
+            this.diceGameButton.setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => this.startTicketCounterScene())
+                .on('pointerover', () => this.diceGameButton.setStyle({ backgroundColor: '#333333' }))
+                .on('pointerout', () => this.diceGameButton.setStyle({ backgroundColor: '#000000' }));
+        }
+        else
+        {
+            this.diceGameButton.setText('Connect Wallet to Play');
+            this.diceGameButton.setStyle({ backgroundColor: '#555555' });
+            this.diceGameButton.disableInteractive();
         }
     }
 }
